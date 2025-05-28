@@ -46,7 +46,9 @@ void ST7735_init(){
 
     Send_Command(0x29); // DISPON (Display On)
     _delay_ms(200);     
-
+    
+    Send_Command(0x36); // MADCTL
+    Send_Data(0xC0);        
     _delay_ms(10);
 }
 

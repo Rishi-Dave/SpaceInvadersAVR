@@ -1,0 +1,236 @@
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <util/delay.h>
+#include "spiAVR.h"
+#include "ST7737.h"
+#include "serial.h"
+
+#include "Objects.h"
+
+#ifndef DRAWINGS_H
+#define DRAWINGS_H
+
+#define COLOR_BLACK 0x0000
+#define COLOR_WHITE 0xFFFF
+#define COLOR_BLUE  0x001F
+#define COLOR_GREY 0x6b2e
+#define COLOR_PURPLE 0x4815
+#define COLOR_GREEN 0x26c0
+#define COLOR_DARK_ORANGE   0xA800 // Approx. RGB(170, 64, 0)
+#define COLOR_MEDIUM_ORANGE 0xFC00 // Approx. RGB(255, 128, 0)
+#define COLOR_YELLOW        0xFFE0 // Approx. RGB(255, 252, 0)
+
+
+const uint16_t ship_data[] = {
+    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 0
+    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 1
+    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 2
+    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 3
+    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK,
+    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK,
+    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY,  // Row 4
+    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, // Row 0
+    COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, // Row 1
+    COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, // Row 2
+    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, // Row 3
+    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY 
+    
+};
+
+const uint16_t alien_data[] = {
+    // Row 0 (from original rows 0-1)
+    COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK,COLOR_BLACK,
+
+    // Row 1 (from original rows 2-3)
+    COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK,COLOR_BLACK,
+
+    // Row 2 (from original rows 4-5)
+    COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK,COLOR_BLACK,
+
+    // Row 3 (from original rows 6-7)
+    COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN,COLOR_BLACK,
+
+    // Row 4 (from original rows 8-9)
+    COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK,COLOR_GREEN,
+
+    // Row 5 (from original rows 10-11)
+   COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK,COLOR_GREEN,
+
+    // Row 6 (from original rows 12-13)
+    COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK,COLOR_GREEN,
+
+    // Row 7 (from original rows 14-15)
+    COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK,
+};
+
+
+// --- Pixel Arrays for Each Button State/Sprite (7x5 pixels) ---
+
+const uint16_t bullet1[] = {
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_MEDIUM_ORANGE, COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,
+    COLOR_DARK_ORANGE,   COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE, COLOR_DARK_ORANGE,
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_MEDIUM_ORANGE, COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
+};
+
+const uint16_t bullet2[] = {
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
+    COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE, COLOR_BLACK,
+    COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE,
+    COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE, COLOR_BLACK,
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
+};
+
+const uint16_t bullet3[] = {
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
+    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
+    COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,
+    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
+};
+
+const uint16_t bullet4[] = {
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
+    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
+    COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,
+    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
+    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
+};
+
+const uint16_t* bullet_data[] =  {bullet1, bullet2, bullet3, bullet4};
+
+const int ALIEN_WIDTH = 11;
+const int ALIEN_HEIGHT = 8;
+
+const int SHIP_WIDTH = 18;
+const int SHIP_HEIGHT = 12;
+
+const int BULLET_WIDTH = 7;
+const int BULLET_HEIGHT = 5;
+
+void fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color) {
+    Send_Command(0x2A); //CASET (columns)
+    Send_Data(0x00);
+    Send_Data(x );
+    Send_Data(0x00);
+    Send_Data(x + 3 + w - 1);
+
+    Send_Command(0x2B); //RASET (rows)
+    Send_Data(0x00);
+    Send_Data(y);
+    Send_Data(0x00);
+    Send_Data(y + 3 + h - 1);
+
+    Send_Command(0x2C); //RAMWR (write to rows)
+    //send every bit as one packet to lower latency
+    SetPin(&PORTB, CS_PIN, 0); 
+    SetPin(&PORTB, A0_PIN, 1);
+
+    uint8_t colorHigh = color >> 8;
+    uint8_t colorLow = color & 0xFF;
+    for (int i = 0; i < w * h; i++) {
+        
+        SPI_SEND(colorHigh);
+        SPI_SEND(colorLow);
+    }
+
+    SetPin(&PORTB, CS_PIN, 1);
+}
+
+void drawShip(Ship ship) {
+    int x = ship.getX();
+    int y = ship.getY();
+    Send_Command(0x2A); //CASET (columns)
+    Send_Data(0x00);
+    Send_Data(x);
+    Send_Data(0x00);
+    Send_Data(x + SHIP_WIDTH - 1);
+
+    Send_Command(0x2B); //RASET (rows)
+    Send_Data(0x00);
+    Send_Data(y);
+    Send_Data(0x00);
+    Send_Data(y + SHIP_HEIGHT - 1);
+
+    Send_Command(0x2C); //RAMWR (write to rows)
+
+    //send every bit as one packet to lower latency
+    SetPin(&PORTB, CS_PIN, 0); 
+    SetPin(&PORTB, A0_PIN, 1);
+
+    for (int i = 0; i < (SHIP_HEIGHT * SHIP_WIDTH); i++) {
+        uint16_t color = ship_data[i];
+        SPI_SEND(color  >> 8);
+        SPI_SEND(color & 0xFF);      
+    }
+
+    SetPin(&PORTB, CS_PIN, 1);
+    
+}
+
+void drawAlien(Alien alien) {
+    int x = alien.getX();
+    int y = alien.getY();
+    Send_Command(0x2A); //CASET (columns)
+    Send_Data(0x00);
+    Send_Data(x);
+    Send_Data(0x00);
+    Send_Data(x + ALIEN_WIDTH - 1);
+
+    Send_Command(0x2B); //RASET (rows)
+    Send_Data(0x00);
+    Send_Data(y);
+    Send_Data(0x00);
+    Send_Data(y + ALIEN_HEIGHT - 1);
+
+    Send_Command(0x2C); //RAMWR (write to rows)
+
+    //send every bit as one packet to lower latency
+    SetPin(&PORTB, CS_PIN, 0); 
+    SetPin(&PORTB, A0_PIN, 1);
+
+    for (int i = 0; i < (ALIEN_HEIGHT * ALIEN_WIDTH); i++) {
+        uint16_t color = alien_data[i];
+        SPI_SEND(color  >> 8);
+        SPI_SEND(color & 0xFF);      
+    }
+
+    SetPin(&PORTB, CS_PIN, 1);
+    
+}
+
+
+void drawBullet(Bullet bullet) {
+    int x = bullet.getX();
+    int y = bullet.getY();
+    Send_Command(0x2A); //CASET (columns)
+    Send_Data(0x00);
+    Send_Data(x);
+    Send_Data(0x00);
+    Send_Data(x + BULLET_WIDTH - 1);
+
+    Send_Command(0x2B); //RASET (rows)
+    Send_Data(0x00);
+    Send_Data(y);
+    Send_Data(0x00);
+    Send_Data(y + BULLET_HEIGHT - 1);
+
+    Send_Command(0x2C); //RAMWR (write to rows)
+
+    //send every bit as one packet to lower latency
+    SetPin(&PORTB, CS_PIN, 0); 
+    SetPin(&PORTB, A0_PIN, 1);
+
+    int state = bullet.getState();
+    for (int i = 0; i < (BULLET_HEIGHT * BULLET_WIDTH); i++) {
+        uint16_t color = bullet_data[state][i];
+        SPI_SEND(color  >> 8);
+        SPI_SEND(color & 0xFF);      
+    }
+
+    SetPin(&PORTB, CS_PIN, 1);
+    
+}
+
+#endif
