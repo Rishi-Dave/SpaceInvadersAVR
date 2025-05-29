@@ -4,110 +4,16 @@
 #include "spiAVR.h"
 #include "ST7737.h"
 #include "serial.h"
-
+#include "font.h"
 #include "Objects.h"
-
+#include "pixelData.h"
 #ifndef DRAWINGS_H
 #define DRAWINGS_H
 
-#define COLOR_BLACK 0x0000
-#define COLOR_WHITE 0xFFFF
-#define COLOR_BLUE  0x001F
-#define COLOR_GREY 0x6b2e
-#define COLOR_PURPLE 0x4815
-#define COLOR_GREEN 0x26c0
-#define COLOR_DARK_ORANGE   0xA800 // Approx. RGB(170, 64, 0)
-#define COLOR_MEDIUM_ORANGE 0xFC00 // Approx. RGB(255, 128, 0)
-#define COLOR_YELLOW        0xFFE0 // Approx. RGB(255, 252, 0)
 
 
-const uint16_t ship_data[] = {
-    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 0
-    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 1
-    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 2
-    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, // Row 3
-    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK,
-    COLOR_BLACK,COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK,
-    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY,  // Row 4
-    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, // Row 0
-    COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, // Row 1
-    COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_PURPLE, COLOR_PURPLE, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, // Row 2
-    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, // Row 3
-    COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_GREY, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREY, COLOR_GREY 
-    
-};
-
-const uint16_t alien_data[] = {
-    // Row 0 (from original rows 0-1)
-    COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK,COLOR_BLACK,
-
-    // Row 1 (from original rows 2-3)
-    COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK,COLOR_BLACK,
-
-    // Row 2 (from original rows 4-5)
-    COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK,COLOR_BLACK,
-
-    // Row 3 (from original rows 6-7)
-    COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN,COLOR_BLACK,
-
-    // Row 4 (from original rows 8-9)
-    COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK,COLOR_GREEN,
-
-    // Row 5 (from original rows 10-11)
-   COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK,COLOR_GREEN,
-
-    // Row 6 (from original rows 12-13)
-    COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_BLACK,COLOR_GREEN,
-
-    // Row 7 (from original rows 14-15)
-    COLOR_BLACK, COLOR_BLACK, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_GREEN, COLOR_GREEN, COLOR_BLACK, COLOR_BLACK, COLOR_BLACK,
-};
 
 
-// --- Pixel Arrays for Each Button State/Sprite (7x5 pixels) ---
-
-const uint16_t bullet1[] = {
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_MEDIUM_ORANGE, COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,
-    COLOR_DARK_ORANGE,   COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE, COLOR_DARK_ORANGE,
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_MEDIUM_ORANGE, COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_DARK_ORANGE,   COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
-};
-
-const uint16_t bullet2[] = {
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
-    COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE, COLOR_BLACK,
-    COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE,
-    COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_MEDIUM_ORANGE, COLOR_BLACK,
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_MEDIUM_ORANGE, COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
-};
-
-const uint16_t bullet3[] = {
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
-    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
-    COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,
-    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
-};
-
-const uint16_t bullet4[] = {
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,
-    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
-    COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,
-    COLOR_BLACK,   COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_YELLOW,        COLOR_BLACK,
-    COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK,   COLOR_YELLOW,        COLOR_BLACK,   COLOR_BLACK,   COLOR_BLACK
-};
-
-const uint16_t* bullet_data[] =  {bullet1, bullet2, bullet3, bullet4};
-
-const int ALIEN_WIDTH = 11;
-const int ALIEN_HEIGHT = 8;
-
-const int SHIP_WIDTH = 18;
-const int SHIP_HEIGHT = 12;
-
-const int BULLET_WIDTH = 7;
-const int BULLET_HEIGHT = 5;
 
 void fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color) {
     Send_Command(0x2A); //CASET (columns)
@@ -189,9 +95,9 @@ void drawAlien(Alien alien) {
     //send every bit as one packet to lower latency
     SetPin(&PORTB, CS_PIN, 0); 
     SetPin(&PORTB, A0_PIN, 1);
-
+    int state = alien.getState();
     for (int i = 0; i < (ALIEN_HEIGHT * ALIEN_WIDTH); i++) {
-        uint16_t color = alien_data[i];
+        uint16_t color = alien_data[state][i];
         SPI_SEND(color  >> 8);
         SPI_SEND(color & 0xFF);      
     }
@@ -201,9 +107,9 @@ void drawAlien(Alien alien) {
 }
 
 
-void drawBullet(Bullet bullet) {
-    int x = bullet.getX();
-    int y = bullet.getY();
+void drawBullet(Bullet* bullet) {
+    int x = bullet->getX();
+    int y = bullet->getY();
     Send_Command(0x2A); //CASET (columns)
     Send_Data(0x00);
     Send_Data(x);
@@ -222,7 +128,7 @@ void drawBullet(Bullet bullet) {
     SetPin(&PORTB, CS_PIN, 0); 
     SetPin(&PORTB, A0_PIN, 1);
 
-    int state = bullet.getState();
+    int state = bullet->getState();
     for (int i = 0; i < (BULLET_HEIGHT * BULLET_WIDTH); i++) {
         uint16_t color = bullet_data[state][i];
         SPI_SEND(color  >> 8);
@@ -231,6 +137,75 @@ void drawBullet(Bullet bullet) {
 
     SetPin(&PORTB, CS_PIN, 1);
     
+}
+
+void my_lcd_set_pixel(int x, int y, uint16_t color) {
+    Send_Command(0x2A); //CASET (columns)
+    Send_Data(0x00);
+    Send_Data(x);
+    Send_Data(0x00);
+    Send_Data(x + 1);
+
+    Send_Command(0x2B); //RASET (rows)
+    Send_Data(0x00);
+    Send_Data(y);
+    Send_Data(0x00);
+    Send_Data(y +1);
+
+    Send_Command(0x2C); //RAMWR (write to rows)
+
+    //send every bit as one packet to lower latency
+    SetPin(&PORTB, CS_PIN, 0); 
+    SetPin(&PORTB, A0_PIN, 1);
+
+    SPI_SEND(color  >> 8);
+    SPI_SEND(color & 0xFF);
+
+    SetPin(&PORTB, CS_PIN, 1);
+}
+
+void drawChar(int x, int y, uint16_t foreground_color, uint16_t background_color, uint8_t charCode) {
+
+    const uint8_t* charBits = font_lookup_table[charCode];
+    for (int row = 0; row < FONT_CHAR_HEIGHT; ++row) {
+        uint8_t row_data = charBits[row]; // Read row data for this character
+
+        for (int col = 0; col < FONT_CHAR_WIDTH; ++col) {
+            // Check the appropriate bit for the pixel (leftmost of 5 bits)
+            if ((row_data >> (FONT_CHAR_WIDTH - 1 - col)) & 0x01) {
+                my_lcd_set_pixel(x + col, y + row, foreground_color);
+            } else {
+                my_lcd_set_pixel(x + col, y + row, background_color);
+            }
+        }
+    }
+}
+
+void gameOver() {
+    int gameover[] = {5,1,7,4,0,14,13,4,9};
+    for(unsigned int i = 0; i < 9; i++){
+        drawChar(i*10+ 10, 60, COLOR_RED, COLOR_BLACK, gameover[i]);
+    }
+}
+
+void gameWin() {
+    int gamewin[] = {15,14,16,0,12,6,8};
+    for(unsigned int i = 0; i < 7; i++){
+        drawChar(i*10+ 10, 60, COLOR_GREEN, COLOR_BLACK, gamewin[i]);
+    }
+}
+
+bool Bullet::hit(Alien alien) {
+    int aX = alien.getX();
+    int aY = alien.getY();
+    if(abs(x - aX) <= 15 && abs(y - aY) <=15) {
+        return true;
+    }   
+return false;
+}
+
+Bullet::~Bullet() {
+    fillRect(this->getX(), this->getY(), BULLET_WIDTH+2, BULLET_HEIGHT+2, COLOR_BLACK);
 }
 
 #endif

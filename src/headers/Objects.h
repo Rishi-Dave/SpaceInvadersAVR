@@ -44,7 +44,7 @@ class Bullet {
     // Public methods to access and modify private data (getters/setters)
         Bullet(int x, int y, int state) : x(x), y(y), state(state) {}
 
-        void moveDown() {
+        void moveUp() {
             y -= 12;
         }
 
@@ -65,6 +65,9 @@ class Bullet {
             return state;
         }
         bool hit(Alien alien);
+        ~Bullet();
+
+        
 };
 
 class Alien {
@@ -98,6 +101,14 @@ class Alien {
             y = newY;
         }
 
+        int getState() {
+            return state;
+        }
+
+        void setState(int newState) {
+            state = newState;
+        }
+
 
         //is hit: is hit by a laser
 
@@ -112,14 +123,6 @@ class Alien {
 
 };
 
-inline bool Bullet::hit(Alien alien) {
-    int aX = alien.getX();
-    int aY = alien.getY();
-    if(abs(x - aX) <= 15 && abs(y - aY) <=15) {
-        return true;
-    }
-    return false;
-}
 
 
 #endif
